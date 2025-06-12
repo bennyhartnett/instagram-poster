@@ -264,14 +264,14 @@ Up to 25 rows. On Save, active rows are converted into a per‑day template. The
 
 2. Ensure the FFmpeg binary is on `PATH` (on Windows bundle `ffmpeg.exe` in `./bin`).
 
-3. Use `PyInstaller` to build a single-file distribution:
+3. Run the provided build script to create a single-file executable:
 
    ```bash
-   pyinstaller -n IGScheduler \
-               --add-binary="bin/ffmpeg.exe;bin" \
-               --exclude-module=tkinter \
-               --onefile main.py
+   python build.py
    ```
+
+   The script invokes `PyInstaller` with the appropriate options (see
+   `build.py` for the exact command).
 
 Ship the resulting executable together with a small README describing the Instagram permission steps.
 
