@@ -92,11 +92,15 @@ class MainWindow(QtWidgets.QMainWindow):
         video = self._current_video()
         if not video:
             return
-        dlg = ScheduleDialog(video.scheduled_at, self)
+        dlg = ScheduleDialog(parent=self)
         if dlg.exec():
-            video.scheduled_at = dlg.scheduled_at
-            self.session.commit()
-            self.load_videos()
+            template = dlg.schedule_template
+            if template:
+                now = datetime.utcnow()
+                dt = datetime.combine(now.date(), template[0])
+                video.scheduled_at = dt
+                self.session.commit()
+                self.load_videos()
 
     def post_selected(self) -> None:
         video = self._current_video()
