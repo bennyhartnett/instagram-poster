@@ -1,3 +1,4 @@
+
 from types import SimpleNamespace
 
 import pytest
@@ -67,3 +68,4 @@ def test_refresh_metrics(monkeypatch):
     assert vid.likes == 1
     assert vid.comments == 2
     assert vid.views == 3
+ 

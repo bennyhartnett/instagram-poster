@@ -10,11 +10,13 @@ def _graceful_shutdown(app: QtWidgets.QApplication, sched, observer) -> None:
         if observer:
             observer.stop()
             observer.join()
+        stop_http_server()
 
     app.aboutToQuit.connect(_on_quit)
 
 
 from backend import db, models, watcher, scheduler
+from backend.instagram import stop_http_server
 from gui.main_window import MainWindow
 
 
@@ -35,7 +37,11 @@ def main() -> None:
     else:
         observer = None
 
-    sched = scheduler.create_scheduler(session, settings.get("max_posts_per_day", 25))
+    sched = scheduler.create_scheduler(
+        session,
+        settings.get("max_posts_per_day", 25),
+        settings.get("metrics_refresh_minutes", 30),
+    )
 
     app = QtWidgets.QApplication([])
     _graceful_shutdown(app, sched, observer)
