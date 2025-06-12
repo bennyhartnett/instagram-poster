@@ -35,11 +35,15 @@ def main() -> None:
     else:
         observer = None
 
-    sched = scheduler.create_scheduler(session, settings.get("max_posts_per_day", 25))
+    sched = scheduler.create_scheduler(
+        session,
+        settings.get("max_posts_per_day", 25),
+        settings.get("metrics_refresh_minutes", 30),
+    )
 
     app = QtWidgets.QApplication([])
     _graceful_shutdown(app, sched, observer)
-    win = MainWindow(session, sched)
+    win = MainWindow(session, sched, observer)
     win.show()
     app.exec()
 

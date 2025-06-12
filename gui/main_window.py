@@ -12,10 +12,11 @@ from .schedule_dialog import ScheduleDialog
 class MainWindow(QtWidgets.QMainWindow):
     """Very small GUI showcasing the core workflow."""
 
-    def __init__(self, session, scheduler, parent=None):
+    def __init__(self, session, scheduler, observer, parent=None):
         super().__init__(parent)
         self.session = session
         self.scheduler = scheduler
+        self.observer = observer
 
         self.setWindowTitle("Instagram Scheduler")
         self.resize(800, 600)
@@ -23,6 +24,10 @@ class MainWindow(QtWidgets.QMainWindow):
         central = QtWidgets.QWidget(self)
         self.setCentralWidget(central)
         layout = QtWidgets.QVBoxLayout(central)
+
+        menubar = self.menuBar()
+        act_settings = menubar.addAction("Settings")
+        act_settings.triggered.connect(self.open_settings)
 
         self.tree = QtWidgets.QTreeWidget()
         self.tree.setHeaderLabels(["Title", "Status", "Scheduled", "Posted"])
@@ -100,4 +105,36 @@ class MainWindow(QtWidgets.QMainWindow):
             self.session.commit()
             QtWidgets.QMessageBox.warning(self, "Error", str(exc))
         self.load_videos()
+
+    def open_settings(self) -> None:
+        from .config_dialog import ConfigDialog
+        dlg = ConfigDialog(self.session.settings, self)
+        if not dlg.exec():
+            return
+        data = dlg.save()
+
+        # update scheduler jobs
+        if "max_posts_per_day" in data:
+            self.scheduler.modify_job(
+                "post_due", args=[self.session, data["max_posts_per_day"]]
+            )
+        if "metrics_refresh_minutes" in data:
+            self.scheduler.reschedule_job(
+                "metrics", trigger="interval", minutes=data["metrics_refresh_minutes"]
+            )
+
+        # restart watcher if folder changed
+        if data.get("watch_folder") != self.session.settings.get("watch_folder"):
+            if self.observer:
+                self.observer.stop()
+                self.observer.join()
+            if data.get("watch_folder"):
+                from backend import watcher
+
+                self.observer = watcher.start_watcher(
+                    data["watch_folder"], self.session
+                )
+            else:
+                self.observer = None
+
 
