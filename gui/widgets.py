@@ -9,25 +9,63 @@ from PySide6 import QtCore, QtGui, QtWidgets, QtMultimedia, QtMultimediaWidgets
 import ffmpeg
 
 
+class _DBLineEdit(QtWidgets.QLineEdit):
+    """QLineEdit that commits changes to the DB on focus loss."""
+
+    def __init__(self, video, session, attr, parent=None):
+        super().__init__(parent)
+        self.video = video
+        self.session = session
+        self.attr = attr
+        self.setText(getattr(video, attr) or "")
+        self.editingFinished.connect(self._save)
+
+    def _save(self) -> None:
+        setattr(self.video, self.attr, self.text())
+        self.session.commit()
+
+
+class _DBTextEdit(QtWidgets.QTextEdit):
+    """QTextEdit that commits changes to the DB on focus loss."""
+
+    def __init__(self, video, session, attr, parent=None):
+        super().__init__(parent)
+        self.video = video
+        self.session = session
+        self.attr = attr
+        self.setPlainText(getattr(video, attr) or "")
+
+    def focusOutEvent(self, event) -> None:  # type: ignore[override]
+        setattr(self.video, self.attr, self.toPlainText())
+        self.session.commit()
+        super().focusOutEvent(event)
+
+
 class VideoItemWidget(QtWidgets.QWidget):
     """Widget representing a single video entry with preview and playback."""
 
-    def __init__(self, title: str, video_path: str, parent: QtWidgets.QWidget | None = None):
+    def __init__(self, video, session, parent: QtWidgets.QWidget | None = None):
         super().__init__(parent)
 
-        self.video_path = video_path
+        self.video = video
+        self.session = session
 
         layout = QtWidgets.QHBoxLayout(self)
 
         self.thumb = QtWidgets.QLabel()
         self.thumb.setFixedSize(160, 90)
         self.thumb.setScaledContents(True)
-        pix = _generate_thumbnail(video_path)
+        pix = _generate_thumbnail(video.file_path)
         if not pix.isNull():
             self.thumb.setPixmap(pix)
         layout.addWidget(self.thumb)
 
-        layout.addWidget(QtWidgets.QLabel(title), 1)
+        form = QtWidgets.QVBoxLayout()
+        self.edit_title = _DBLineEdit(video, session, "title")
+        form.addWidget(self.edit_title)
+        self.edit_desc = _DBTextEdit(video, session, "description")
+        form.addWidget(self.edit_desc)
+        layout.addLayout(form, 1)
 
         self.btn_play = QtWidgets.QPushButton("Play")
         self.btn_play.clicked.connect(self._open_player)
@@ -35,7 +73,7 @@ class VideoItemWidget(QtWidgets.QWidget):
 
     # ------------------------------------------------------------------
     def _open_player(self) -> None:
-        dlg = _PlayerDialog(self.video_path, self)
+        dlg = _PlayerDialog(self.video.file_path, self)
         dlg.exec()
 
 

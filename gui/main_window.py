@@ -7,6 +7,7 @@ from PySide6 import QtCore, QtWidgets
 from backend.models import Video
 from backend.instagram import post_to_instagram
 from .schedule_dialog import ScheduleDialog
+from .widgets import VideoItemWidget
 
 
 class MainWindow(QtWidgets.QMainWindow):
@@ -25,7 +26,7 @@ class MainWindow(QtWidgets.QMainWindow):
         layout = QtWidgets.QVBoxLayout(central)
 
         self.tree = QtWidgets.QTreeWidget()
-        self.tree.setHeaderLabels(["Title", "Status", "Scheduled", "Posted"])
+        self.tree.setHeaderLabels(["Video", "Status", "Scheduled", "Posted"])
         layout.addWidget(self.tree)
 
         btn_layout = QtWidgets.QHBoxLayout()
@@ -56,16 +57,16 @@ class MainWindow(QtWidgets.QMainWindow):
                 if video.posted_at
                 else ("Scheduled" if video.scheduled_at else "Unscheduled")
             )
-            item = QtWidgets.QTreeWidgetItem(
-                [
-                    video.title or Path(video.file_path).name,
-                    status,
-                    str(video.scheduled_at) if video.scheduled_at else "",
-                    str(video.posted_at) if video.posted_at else "",
-                ]
-            )
+            item = QtWidgets.QTreeWidgetItem([
+                "",
+                status,
+                str(video.scheduled_at) if video.scheduled_at else "",
+                str(video.posted_at) if video.posted_at else "",
+            ])
             item.setData(0, QtCore.Qt.UserRole, video.id)
             self.tree.addTopLevelItem(item)
+            widget = VideoItemWidget(video, self.session)
+            self.tree.setItemWidget(item, 0, widget)
 
     def _current_video(self) -> Video | None:
         item = self.tree.currentItem()
