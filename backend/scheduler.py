@@ -33,9 +33,24 @@ def post_due_videos(session: Session, max_posts_per_day: int):
             session.commit()
 
 
-def create_scheduler(session: Session, max_posts_per_day: int) -> BackgroundScheduler:
+def create_scheduler(
+    session: Session,
+    max_posts_per_day: int,
+    metrics_refresh_minutes: int = 30,
+) -> BackgroundScheduler:
+    """Create and start the background scheduler."""
     scheduler = BackgroundScheduler(daemon=True)
-    scheduler.add_job(post_due_videos, "interval", minutes=1, args=[session, max_posts_per_day])
-    scheduler.add_job(refresh_metrics, "interval", minutes=30, args=[session])
+    scheduler.add_job(
+        post_due_videos,
+        "interval",
+        minutes=1,
+        args=[session, max_posts_per_day],
+    )
+    scheduler.add_job(
+        refresh_metrics,
+        "interval",
+        minutes=metrics_refresh_minutes,
+        args=[session],
+    )
     scheduler.start()
     return scheduler
