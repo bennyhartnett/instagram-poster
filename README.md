@@ -252,7 +252,7 @@ Up to 25 rows. On Save, active rows are converted into a per‑day template. The
 | Long‑lived Token | `QLineEdit` | Stored via `keyring` on Apply |
 | Max posts / day | `QSpinBox` (0–25) | Immediate effect |
 | Metrics refresh minutes | `QSpinBox` | 5–120 |
-| Time‑zone override | `QComboBox` (pytz) | Only necessary if system TZ differs from desired posting TZ |
+| Time‑zone override | `QComboBox` (pytz) | Used to interpret scheduled times and display dates |
 
 ## Packaging & Install
 

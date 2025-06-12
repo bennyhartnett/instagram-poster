@@ -1,11 +1,13 @@
 """Main application window."""
-from datetime import datetime
+from datetime import datetime, timezone
+from zoneinfo import ZoneInfo
 from pathlib import Path
 
 from PySide6 import QtCore, QtWidgets
 
 from backend.models import Video
 from backend.instagram import post_to_instagram
+from backend.utils import get_timezone
 from .schedule_dialog import ScheduleDialog
 
 
@@ -16,6 +18,7 @@ class MainWindow(QtWidgets.QMainWindow):
         super().__init__(parent)
         self.session = session
         self.scheduler = scheduler
+        self.tz = get_timezone(getattr(session, "settings", None))
 
         self.setWindowTitle("Instagram Scheduler")
         self.resize(800, 600)
@@ -56,12 +59,26 @@ class MainWindow(QtWidgets.QMainWindow):
                 if video.posted_at
                 else ("Scheduled" if video.scheduled_at else "Unscheduled")
             )
+            sched = (
+                video.scheduled_at.replace(tzinfo=timezone.utc)
+                .astimezone(self.tz)
+                .strftime("%Y-%m-%d %H:%M")
+                if video.scheduled_at
+                else ""
+            )
+            posted = (
+                video.posted_at.replace(tzinfo=timezone.utc)
+                .astimezone(self.tz)
+                .strftime("%Y-%m-%d %H:%M")
+                if video.posted_at
+                else ""
+            )
             item = QtWidgets.QTreeWidgetItem(
                 [
                     video.title or Path(video.file_path).name,
                     status,
-                    str(video.scheduled_at) if video.scheduled_at else "",
-                    str(video.posted_at) if video.posted_at else "",
+                    sched,
+                    posted,
                 ]
             )
             item.setData(0, QtCore.Qt.UserRole, video.id)
@@ -81,7 +98,7 @@ class MainWindow(QtWidgets.QMainWindow):
         video = self._current_video()
         if not video:
             return
-        dlg = ScheduleDialog(video.scheduled_at, self)
+        dlg = ScheduleDialog(video.scheduled_at, self.tz, self)
         if dlg.exec():
             video.scheduled_at = dlg.scheduled_at
             self.session.commit()

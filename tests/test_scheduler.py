@@ -10,7 +10,9 @@ def create_session():
     engine = create_engine("sqlite:///:memory:", future=True)
     Base.metadata.create_all(engine)
     Session = sessionmaker(bind=engine)
-    return Session()
+    session = Session()
+    session.settings = {"timezone": "UTC"}
+    return session
 
 
 def test_post_due_videos(monkeypatch):
