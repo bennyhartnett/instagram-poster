@@ -3,6 +3,7 @@ from datetime import datetime
 from pathlib import Path
 
 from PySide6 import QtCore, QtWidgets
+from send2trash import send2trash
 
 from backend.models import Video
 from backend.instagram import post_to_instagram
@@ -32,14 +33,17 @@ class MainWindow(QtWidgets.QMainWindow):
         self.btn_refresh = QtWidgets.QPushButton("Refresh")
         self.btn_schedule = QtWidgets.QPushButton("Schedule")
         self.btn_post_now = QtWidgets.QPushButton("Post Now")
+        self.btn_delete = QtWidgets.QPushButton("Delete")
         btn_layout.addWidget(self.btn_refresh)
         btn_layout.addWidget(self.btn_schedule)
         btn_layout.addWidget(self.btn_post_now)
+        btn_layout.addWidget(self.btn_delete)
         layout.addLayout(btn_layout)
 
         self.btn_refresh.clicked.connect(self.load_videos)
         self.btn_schedule.clicked.connect(self.schedule_selected)
         self.btn_post_now.clicked.connect(self.post_selected)
+        self.btn_delete.clicked.connect(self.delete_selected)
 
         self.load_videos()
 
@@ -99,5 +103,18 @@ class MainWindow(QtWidgets.QMainWindow):
             video.last_error = str(exc)
             self.session.commit()
             QtWidgets.QMessageBox.warning(self, "Error", str(exc))
+        self.load_videos()
+
+    def delete_selected(self) -> None:
+        video = self._current_video()
+        if not video:
+            return
+        try:
+            send2trash(video.file_path)
+        except Exception as exc:  # pragma: no cover - OS errors
+            QtWidgets.QMessageBox.warning(self, "Error", str(exc))
+            return
+        video.is_active = False
+        self.session.commit()
         self.load_videos()
 
