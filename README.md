@@ -20,6 +20,15 @@ This repository contains an outline for a desktop application that schedules and
 
 The GUI opens and begins watching the configured folder for new videos.
 
+## Running Tests
+
+Ensure the dependencies from `requirements.txt` are installed and then run `pytest`:
+
+```bash
+pip install -r requirements.txt
+pytest
+```
+
 ## Technology Stack
 
 | Layer                     | Package / Framework             | Purpose                                                                                   |
