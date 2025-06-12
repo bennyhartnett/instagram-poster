@@ -33,3 +33,12 @@ def test_post_due_videos(monkeypatch):
     assert len(posted) == 1
     assert v1.posted_at is not None
     assert v2.posted_at is None
+
+
+def test_create_scheduler_uses_refresh_interval():
+    session = create_session()
+    sched = scheduler.create_scheduler(session, 1, metrics_refresh_minutes=42)
+    # Find the refresh_metrics job
+    job = next(j for j in sched.get_jobs() if j.func == scheduler.refresh_metrics)
+    assert job.trigger.interval.total_seconds() == 42 * 60
+    sched.shutdown(wait=False)
