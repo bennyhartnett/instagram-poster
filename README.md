@@ -2,6 +2,24 @@
 
 This repository contains an outline for a desktop application that schedules and uploads videos to Instagram via the Graph API.
 
+## Quick Start
+
+1. Create a Python 3.11+ virtual environment.
+2. Install dependencies from `requirements.txt`:
+
+   ```bash
+   pip install -r requirements.txt
+   ```
+
+3. Edit `settings.json` to configure your watch folder and Instagram credentials.
+4. Run the app with:
+
+   ```bash
+   python main.py
+   ```
+
+The GUI opens and begins watching the configured folder for new videos.
+
 ## Technology Stack
 
 | Layer                     | Package / Framework             | Purpose                                                                                   |
