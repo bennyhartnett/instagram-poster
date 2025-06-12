@@ -10,11 +10,13 @@ def _graceful_shutdown(app: QtWidgets.QApplication, sched, observer) -> None:
         if observer:
             observer.stop()
             observer.join()
+        stop_http_server()
 
     app.aboutToQuit.connect(_on_quit)
 
 
 from backend import db, models, watcher, scheduler
+from backend.instagram import stop_http_server
 from gui.main_window import MainWindow
 
 
