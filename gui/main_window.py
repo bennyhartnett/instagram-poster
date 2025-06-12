@@ -4,6 +4,8 @@ from pathlib import Path
 
 from PySide6 import QtCore, QtWidgets
 
+from .widgets import VideoItemWidget
+
 from backend.models import Video
 from backend.instagram import post_to_instagram
 from .schedule_dialog import ScheduleDialog
@@ -56,16 +58,21 @@ class MainWindow(QtWidgets.QMainWindow):
                 if video.posted_at
                 else ("Scheduled" if video.scheduled_at else "Unscheduled")
             )
-            item = QtWidgets.QTreeWidgetItem(
-                [
-                    video.title or Path(video.file_path).name,
-                    status,
-                    str(video.scheduled_at) if video.scheduled_at else "",
-                    str(video.posted_at) if video.posted_at else "",
-                ]
-            )
+            item = QtWidgets.QTreeWidgetItem([
+                "",  # widget will be set below
+                status,
+                str(video.scheduled_at) if video.scheduled_at else "",
+                str(video.posted_at) if video.posted_at else "",
+            ])
             item.setData(0, QtCore.Qt.UserRole, video.id)
             self.tree.addTopLevelItem(item)
+
+            widget = VideoItemWidget(
+                video.title or Path(video.file_path).name,
+                video.file_path,
+                self.tree,
+            )
+            self.tree.setItemWidget(item, 0, widget)
 
     def _current_video(self) -> Video | None:
         item = self.tree.currentItem()
